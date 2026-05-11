@@ -16,14 +16,7 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
-Model artifact is tracked with Git LFS. On a fresh host run:
-
-```bash
-# git-lfs is a system binary (not a Python package), so pip will not install it.
-sudo apt-get update && sudo apt-get install -y git-lfs
-git lfs install
-git lfs pull --include weights/ml_realbench_1h_v3_recent2_hgb_deep_model.pkl
-```
+Model artifact is tracked directly in git (no Git LFS step required).
 
 ## Run Miner
 
