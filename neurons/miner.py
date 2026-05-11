@@ -105,7 +105,7 @@ class Miner(BaseMinerNeuron):
                 "model_version": "12.3",
                 "framework": "python-sklearn-hist-gradient-boosting",
                 "license": "MIT",
-                "repo_url": "https://github.com/tomkaba/poker44-miner-gen12ml1hv3",
+                "repo_url": "https://github.com/tomkaba/poker44-miner-ml12ml1hv3",
                 "repo_commit": git_commit,
                 "notes": "Gen12 ml1h-only scorer with fixed ml_realbench_1h_v3_recent2_hgb_deep artifact.",
                 "open_source": True,
