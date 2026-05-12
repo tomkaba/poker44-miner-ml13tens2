@@ -1,22 +1,19 @@
-# Poker44-gen12ml1hv3
+# Poker44-gen13tens1
 
-Minimal release repository for model gen12ml1hv3.
+Minimal release repository for Poker44 miner runtime scoring.
 
-This repo is a standalone miner variant extracted from the main subnet codebase,
-with only ml1h scoring logic enabled.
+This repository is a standalone miner variant prepared for production rollout.
 
 ## Quick start
 
 ```bash
-git clone https://github.com/tomkaba/poker44-miner-ml12ml1hv3.git
-cd poker44-miner-ml12ml1hv3
+git clone https://github.com/tomkaba/poker44-miner-gen13tens1.git
+cd poker44-miner-gen13tens1
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 pip install -e .
 ```
-
-Model artifact is tracked directly in git (no Git LFS step required).
 
 ## Run Miner
 
@@ -32,15 +29,11 @@ or legacy wrapper:
 
 ## Implementation
 
-- Scorer: score_chunk_ml1h_with_route() in poker44/miner_heuristics.py
-- Artifacts:
-  - weights/ml_realbench_1h_v3_recent2_hgb_deep_model.pkl
-  - weights/ml_realbench_1h_v3_recent2_hgb_deep_scaler.pkl
+- Scorer entrypoint: poker44/miner_heuristics.py
 - Entry point: neurons/miner.py
 
 Manifest implementation SHA256 is computed from:
 
 - neurons/miner.py
 - poker44/miner_heuristics.py
-- weights/ml_realbench_1h_v3_recent2_hgb_deep_model.pkl
-- weights/ml_realbench_1h_v3_recent2_hgb_deep_scaler.pkl
+- runtime files tracked in repository

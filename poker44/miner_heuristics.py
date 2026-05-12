@@ -1,23 +1,36 @@
-"""ML1H-only scoring for Poker44 gen12 v1 release (real-benchmark HGB artifact)."""
+"""Runtime chunk scoring."""
 
 from __future__ import annotations
 
 import os
-import pickle
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
+import torch
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-ML1H_MODEL_PATH = REPO_ROOT / "weights" / "ml_realbench_1h_v3_recent2_hgb_deep_model.pkl"
-ML1H_SCALER_PATH = REPO_ROOT / "weights" / "ml_realbench_1h_v3_recent2_hgb_deep_scaler.pkl"
-ML1H_THRESHOLD = 0.70
+RUNTIME_MODEL_PATH = REPO_ROOT / "weights" / "runtime_model.ts"
 
-_ML1H_MODEL = None
-_ML1H_SCALER = None
-_ML1H_AVAILABLE = False
-_ML1H_LOAD_ERROR: Optional[str] = None
+ACTION_MAP = {
+    "fold": 1,
+    "call": 2,
+    "raise": 3,
+    "check": 4,
+    "bet": 5,
+    "all_in": 6,
+}
+
+STREET_MAP = {
+    "preflop": 1,
+    "flop": 2,
+    "turn": 3,
+    "river": 4,
+}
+
+_RUNTIME_MODEL: Optional[torch.jit.ScriptModule] = None
+_RUNTIME_AVAILABLE = False
+_RUNTIME_LOAD_ERROR: Optional[str] = None
 
 
 def _clamp01(value: float) -> float:
@@ -31,166 +44,131 @@ def _safe_float(value: object) -> float:
         return 0.0
 
 
-def _extract_ml_features_gen4(chunk: List[dict]) -> Optional[np.ndarray]:
-    """Extract 16-dimensional feature vector used by the ml1h model."""
-    if not chunk:
-        return None
-
-    hand = chunk[0]
-    players = hand.get("players") or []
-    actions = hand.get("actions") or []
-    outcome = hand.get("outcome") or {}
-    streets = hand.get("streets") or []
-    metadata = hand.get("metadata") or {}
-
-    hand_bb_val = _safe_float(metadata.get("bb") or 0.01) or 0.01
-    max_seats = max(int(metadata.get("max_seats") or 6), 1)
-
-    num_players = float(len(players))
-    filled_ratio = num_players / float(max_seats)
-
-    starting_stacks = [_safe_float(p.get("starting_stack")) for p in players]
-    # Keep the same stack scaling as the source ml1h implementation.
-    stack_factor = 15.0
-    starting_stacks_scaled = [s * stack_factor for s in starting_stacks]
-    stack_mean = float(np.mean(starting_stacks_scaled)) if starting_stacks_scaled else 0.0
-    stack_std = float(np.std(starting_stacks_scaled)) if starting_stacks_scaled else 0.0
-    stack_cv = stack_std / (stack_mean + 1e-9)
-
-    action_types = [str(a.get("action_type") or "").lower() for a in actions]
-    total_actions = float(len(action_types))
-
-    def _cnt(name: str) -> float:
-        return float(sum(1 for t in action_types if t == name))
-
-    call_c = _cnt("call")
-    check_c = _cnt("check")
-    fold_c = _cnt("fold")
-    raise_c = _cnt("raise")
-    bet_c = _cnt("bet")
-
-    meaningful = call_c + check_c + fold_c + raise_c + bet_c
-    if meaningful > 0:
-        call_r = call_c / meaningful
-        check_r = check_c / meaningful
-        fold_r = fold_c / meaningful
-        raise_r = raise_c / meaningful
-    else:
-        call_r = check_r = fold_r = raise_r = 0.0
-
-    agg_ratio = (raise_c + bet_c) / (call_c + check_c + 1.0)
-
-    amounts = [_safe_float(a.get("amount")) for a in actions]
-    amounts_pos = [a for a in amounts if a > 0]
-    amount_mean_bb = (float(np.mean(amounts_pos)) / hand_bb_val) if amounts_pos else 0.0
-    amount_max_bb = (float(np.max(amounts_pos)) / hand_bb_val) if amounts_pos else 0.0
-
-    total_pot = _safe_float(outcome.get("total_pot"))
-    total_pot_bb = total_pot / hand_bb_val
-    showdown = 1.0 if bool(outcome.get("showdown")) else 0.0
-
-    flop_seen = 1.0 if any(s.get("street") == "FLOP" for s in streets) else 0.0
-    turn_seen = 1.0 if any(s.get("street") == "TURN" for s in streets) else 0.0
-    river_seen = 1.0 if any(s.get("street") == "RIVER" for s in streets) else 0.0
-    street_depth = flop_seen + turn_seen + river_seen
-
-    return np.array(
-        [
-            num_players,
-            filled_ratio,
-            stack_mean,
-            stack_std,
-            stack_cv,
-            total_actions,
-            call_r,
-            check_r,
-            fold_r,
-            raise_r,
-            agg_ratio,
-            amount_mean_bb,
-            amount_max_bb,
-            total_pot_bb,
-            showdown,
-            street_depth,
-        ],
-        dtype=np.float32,
-    )
+def _runtime_shape() -> Tuple[int, int]:
+    max_hands = int(os.getenv("POKER44_MODEL_MAX_HANDS", "128"))
+    max_actions = int(os.getenv("POKER44_MODEL_MAX_ACTIONS", "32"))
+    return max(1, max_hands), max(1, max_actions)
 
 
-def _load_ml1h_model() -> bool:
-    """Load fixed ml1h single-hand model and scaler."""
-    global _ML1H_MODEL, _ML1H_SCALER, _ML1H_AVAILABLE, _ML1H_LOAD_ERROR
+def _encode_chunk(chunk: List[dict], max_hands: int, max_actions: int) -> Dict[str, np.ndarray]:
+    shape = (max_hands, max_actions)
 
-    if _ML1H_AVAILABLE and _ML1H_MODEL is not None and _ML1H_SCALER is not None:
+    arr_action_type = np.zeros(shape, dtype=np.int64)
+    arr_street = np.zeros(shape, dtype=np.int64)
+    arr_actor_seat = np.zeros(shape, dtype=np.int64)
+
+    arr_amount = np.zeros(shape, dtype=np.float32)
+    arr_raise_to = np.zeros(shape, dtype=np.float32)
+    arr_call_to = np.zeros(shape, dtype=np.float32)
+    arr_norm_bb = np.zeros(shape, dtype=np.float32)
+    arr_pot_before = np.zeros(shape, dtype=np.float32)
+    arr_pot_after = np.zeros(shape, dtype=np.float32)
+
+    arr_raise_miss = np.zeros(shape, dtype=np.float32)
+    arr_call_miss = np.zeros(shape, dtype=np.float32)
+    arr_valid = np.zeros(shape, dtype=np.float32)
+
+    for h_i, hand in enumerate(chunk[:max_hands]):
+        actions = hand.get("actions") or []
+        for a_i, action in enumerate(actions[:max_actions]):
+            t = (action.get("action_type") or "").lower()
+            s = (action.get("street") or "").lower()
+            seat = action.get("actor_seat")
+
+            arr_action_type[h_i, a_i] = ACTION_MAP.get(t, 0)
+            arr_street[h_i, a_i] = STREET_MAP.get(s, 0)
+            arr_actor_seat[h_i, a_i] = int(seat) + 1 if isinstance(seat, int) and seat >= 0 else 0
+
+            arr_amount[h_i, a_i] = _safe_float(action.get("amount"))
+            rto = action.get("raise_to")
+            cto = action.get("call_to")
+            arr_raise_miss[h_i, a_i] = 1.0 if rto is None else 0.0
+            arr_call_miss[h_i, a_i] = 1.0 if cto is None else 0.0
+            arr_raise_to[h_i, a_i] = _safe_float(rto)
+            arr_call_to[h_i, a_i] = _safe_float(cto)
+            arr_norm_bb[h_i, a_i] = _safe_float(action.get("normalized_amount_bb"))
+            arr_pot_before[h_i, a_i] = _safe_float(action.get("pot_before"))
+            arr_pot_after[h_i, a_i] = _safe_float(action.get("pot_after"))
+            arr_valid[h_i, a_i] = 1.0
+
+    return {
+        "action_type": arr_action_type,
+        "street": arr_street,
+        "actor_seat": arr_actor_seat,
+        "amount": arr_amount,
+        "raise_to": arr_raise_to,
+        "call_to": arr_call_to,
+        "norm_amount_bb": arr_norm_bb,
+        "pot_before": arr_pot_before,
+        "pot_after": arr_pot_after,
+        "raise_to_missing": arr_raise_miss,
+        "call_to_missing": arr_call_miss,
+        "valid_mask": arr_valid,
+    }
+
+
+def _load_runtime_model() -> bool:
+    global _RUNTIME_MODEL, _RUNTIME_AVAILABLE, _RUNTIME_LOAD_ERROR
+
+    if _RUNTIME_AVAILABLE and _RUNTIME_MODEL is not None:
         return True
-    if _ML1H_LOAD_ERROR is not None:
+    if _RUNTIME_LOAD_ERROR is not None:
         return False
 
     try:
-        with open(ML1H_MODEL_PATH, "rb") as f:
-            _ML1H_MODEL = pickle.load(f)
-        with open(ML1H_SCALER_PATH, "rb") as f:
-            _ML1H_SCALER = pickle.load(f)
-        _ML1H_AVAILABLE = True
-        _ML1H_LOAD_ERROR = None
+        _RUNTIME_MODEL = torch.jit.load(str(RUNTIME_MODEL_PATH), map_location="cpu")
+        _RUNTIME_MODEL.eval()
+        _RUNTIME_AVAILABLE = True
+        _RUNTIME_LOAD_ERROR = None
         return True
     except Exception as exc:
-        _ML1H_MODEL = None
-        _ML1H_SCALER = None
-        _ML1H_AVAILABLE = False
-        _ML1H_LOAD_ERROR = str(exc)
+        _RUNTIME_MODEL = None
+        _RUNTIME_AVAILABLE = False
+        _RUNTIME_LOAD_ERROR = str(exc)
         return False
 
 
-def _predict_single_hand_probability(hand: dict) -> Optional[float]:
-    if not _load_ml1h_model():
-        return None
-
-    features = _extract_ml_features_gen4([hand])
-    if features is None:
-        return None
-
-    try:
-        batch = features.reshape(1, -1)
-        batch = _ML1H_SCALER.transform(batch)
-        prob = float(_ML1H_MODEL.predict_proba(batch)[0, 1])
-        return _clamp01(prob)
-    except Exception:
-        return None
-
-
-def score_chunk_ml1h_with_route(chunk: List[dict]) -> Tuple[float, str]:
-    """Score every request via ml1h model only, with no fallback scorers."""
+def score_chunk_runtime_with_route(chunk: List[dict]) -> Tuple[float, str]:
     if not chunk:
         return 0.5, "empty_chunk"
 
-    if not _load_ml1h_model():
-        return 0.5, "ml1h_model_unavailable"
+    if not _load_runtime_model() or _RUNTIME_MODEL is None:
+        return 0.5, "runtime_unavailable"
 
-    if len(chunk) == 1:
-        raw = _predict_single_hand_probability(chunk[0])
-        if raw is None:
-            return 0.5, "ml1h_single_error"
-        calibrated = _clamp01(raw - ML1H_THRESHOLD + 0.5)
-        return round(calibrated, 6), "ml1h_single"
+    try:
+        max_hands, max_actions = _runtime_shape()
+        enc = _encode_chunk(chunk, max_hands=max_hands, max_actions=max_actions)
 
-    probs: List[float] = []
-    for hand in chunk:
-        raw = _predict_single_hand_probability(hand)
-        if raw is not None:
-            probs.append(raw)
+        x = {}
+        for k, v in enc.items():
+            t = torch.from_numpy(v).unsqueeze(0)
+            if k in {"action_type", "street", "actor_seat"}:
+                x[k] = t.long()
+            else:
+                x[k] = t.float()
 
-    if not probs:
-        return 0.5, "ml1h_vote_error"
-
-    calibrated = np.clip(np.asarray(probs, dtype=np.float32) - ML1H_THRESHOLD + 0.5, 0.0, 1.0)
-    bot_flags = calibrated >= 0.5
-    score = float(np.mean(bot_flags.astype(np.float32)))
-    return round(_clamp01(score), 6), "ml1h_vote"
+        with torch.no_grad():
+            y = _RUNTIME_MODEL(
+                x["action_type"],
+                x["street"],
+                x["actor_seat"],
+                x["amount"],
+                x["raise_to"],
+                x["call_to"],
+                x["norm_amount_bb"],
+                x["pot_before"],
+                x["pot_after"],
+                x["raise_to_missing"],
+                x["call_to_missing"],
+                x["valid_mask"],
+            )
+        return round(_clamp01(float(y.item())), 6), "runtime"
+    except Exception:
+        return 0.5, "runtime_error"
 
 
 def score_chunk(chunk: List[dict]) -> float:
-    score, _route = score_chunk_ml1h_with_route(chunk)
+    score, _route = score_chunk_runtime_with_route(chunk)
     return score
 
 
@@ -198,26 +176,24 @@ def get_chunk_scorer_startup_check(scorer: str) -> Dict[str, object]:
     scorer_norm = (scorer or "").strip().lower()
     info: Dict[str, object] = {
         "scorer": scorer_norm,
-        "active": scorer_norm == "ml1h",
+        "active": scorer_norm == "runtime",
         "ok": True,
         "error": None,
         "details": {},
     }
 
-    if scorer_norm != "ml1h":
+    if scorer_norm != "runtime":
         return info
 
     info["details"] = {
-        "model_path": str(ML1H_MODEL_PATH),
-        "model_exists": ML1H_MODEL_PATH.exists(),
-        "scaler_path": str(ML1H_SCALER_PATH),
-        "scaler_exists": ML1H_SCALER_PATH.exists(),
-        "threshold": ML1H_THRESHOLD,
+        "artifact_path": str(RUNTIME_MODEL_PATH),
+        "artifact_exists": RUNTIME_MODEL_PATH.exists(),
+        "shape": _runtime_shape(),
     }
 
-    ok = _load_ml1h_model()
+    ok = _load_runtime_model()
     info["ok"] = ok
     if not ok:
-        info["error"] = _ML1H_LOAD_ERROR
+        info["error"] = _RUNTIME_LOAD_ERROR
 
     return info

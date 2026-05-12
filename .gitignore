@@ -9,8 +9,7 @@ logs/
 logs_backup/
 baklogs/
 weights/*
-!weights/ml_realbench_1h_v3_recent2_hgb_deep_model.pkl
-!weights/ml_realbench_1h_v3_recent2_hgb_deep_scaler.pkl
+!weights/runtime_model.ts
 data/
 analysis/
 *.sh~
