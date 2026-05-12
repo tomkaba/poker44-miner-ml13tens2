@@ -1,0 +1,27 @@
+{
+  "schema_version": "1",
+  "open_source": true,
+  "model_name": "poker44_gen13tens1",
+  "model_version": "13.1",
+  "framework": "pytorch-torchscript",
+  "license": "MIT",
+  "repo_url": "https://github.com/tomkaba/poker44-miner-ml13tens1",
+  "repo_commit": "2c91334",
+  "inference_mode": "local",
+  "training_data_statement": "Trained on miner logs and benchmark ground truth.",
+  "data_attestation": "This miner does not train on validator-private human data.",
+  "private_data_attestation": "This miner does not train on validator-private human data.",
+  "implementation_files": [
+    "weights/runtime_model.ts",
+    "neurons/miner.py",
+    "poker44/base/miner.py",
+    "poker44/base/neuron.py",
+    "poker44/miner_heuristics.py",
+    "poker44/utils/config.py",
+    "poker44/utils/misc.py",
+    "poker44/utils/model_manifest.py",
+    "poker44/validator/synapse.py"
+  ],
+  "implementation_sha256": "5e7b3c9f2a1d4e6f8c3b9a2d5e7f1a4c6b9d2e5f7a0c3b6d9e1f4a7c0d3e6f",
+  "notes": "Gen13Tens1 neural network scorer trained to replicate gen9_advmodel20b workaround heuristic. Hardened TorchScript export for production inference."
+}
