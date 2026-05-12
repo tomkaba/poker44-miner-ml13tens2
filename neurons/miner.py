@@ -146,6 +146,10 @@ class Miner(BaseMinerNeuron):
             f"Manifest digest={self.manifest_digest} "
             f"inference_mode={self.model_manifest.get('inference_mode', '')}"
         )
+        bt.logging.info(
+            f"Implementation sha256={self.model_manifest.get('implementation_sha256', '')} "
+            f"files={len(self.model_manifest.get('implementation_files', []) or [])}"
+        )
         bt.logging.info(f"Project root: {repo_root}")
 
     async def forward(self, synapse: DetectionSynapse) -> DetectionSynapse:
