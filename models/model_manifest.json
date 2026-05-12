@@ -14,6 +14,7 @@
   "implementation_files": [
     "weights/runtime_model.ts",
     "neurons/miner.py",
+    "poker44/__init__.py",
     "poker44/base/miner.py",
     "poker44/base/neuron.py",
     "poker44/miner_heuristics.py",
@@ -22,6 +23,6 @@
     "poker44/utils/model_manifest.py",
     "poker44/validator/synapse.py"
   ],
-  "implementation_sha256": "c5f49082cf31b88a05ea0069b45dd2be6ec9503adb9f80699d8da930181340f4",
+  "implementation_sha256": "e3a9133f3cff0fec8b1c3167b5c136d33a3343d80a13ed80d1fa7b583e712469",
   "notes": "Gen13Tens1 neural network scorer trained to replicate gen9_advmodel20b workaround heuristic. Hardened TorchScript export for production inference."
 }
