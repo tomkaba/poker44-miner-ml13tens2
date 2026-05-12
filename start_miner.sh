@@ -110,8 +110,7 @@ PY
 
 echo "[manifest] POKER44_MODEL_REPO_URL=$MANIFEST_REPO_URL"
 echo "[manifest] POKER44_MODEL_REPO_COMMIT=$MANIFEST_REPO_COMMIT"
-echo "[manifest] POKER44_MODEL_IMPLEMENTATION_FILES=$MANIFEST_IMPL_FILES"
-echo "[manifest] POKER44_MODEL_IMPLEMENTATION_SHA256=$MANIFEST_IMPL_SHA256"
+echo "[manifest] implementation_files / implementation_sha256 computed inside neurons/miner.py"
 
 for raw_id in $(echo "$IDS_STRING" | tr ',' '\n'); do
   I="$(echo "$raw_id" | tr -d ' ')"
@@ -142,11 +141,9 @@ for raw_id in $(echo "$IDS_STRING" | tr ',' '\n'); do
     export POKER44_CHUNK_SCORER=runtime
     export POKER44_MODEL_REPO_URL=$MANIFEST_REPO_URL
     export POKER44_MODEL_REPO_COMMIT=$MANIFEST_REPO_COMMIT
-    export POKER44_MODEL_IMPLEMENTATION_FILES=$MANIFEST_IMPL_FILES
-    export POKER44_MODEL_IMPLEMENTATION_SHA256=$MANIFEST_IMPL_SHA256
     echo '[runtime] HOTKEY_ID=$I'
     echo '[runtime] CHUNK_SCORER=runtime'
-    echo '[runtime] MANIFEST_SHA256=$MANIFEST_IMPL_SHA256'
+    echo '[runtime] manifest implementation hash computed in miner'
     $VENV_BIN/python -m neurons.miner \
       --netuid 126 \
       --wallet.name $WALLET_NAME \
