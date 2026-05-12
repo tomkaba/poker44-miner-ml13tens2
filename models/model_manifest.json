@@ -22,6 +22,6 @@
     "poker44/utils/model_manifest.py",
     "poker44/validator/synapse.py"
   ],
-  "implementation_sha256": "5e7b3c9f2a1d4e6f8c3b9a2d5e7f1a4c6b9d2e5f7a0c3b6d9e1f4a7c0d3e6f",
+  "implementation_sha256": "c5f49082cf31b88a05ea0069b45dd2be6ec9503adb9f80699d8da930181340f4",
   "notes": "Gen13Tens1 neural network scorer trained to replicate gen9_advmodel20b workaround heuristic. Hardened TorchScript export for production inference."
 }
