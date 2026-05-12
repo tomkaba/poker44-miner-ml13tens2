@@ -1,7 +1,7 @@
 {
   "schema_version": "1",
   "open_source": true,
-  "model_name": "poker44_gen13tens1",
+  "model_name": "poker44_ml13tens1",
   "model_version": "13.1",
   "framework": "pytorch-torchscript",
   "license": "MIT",
