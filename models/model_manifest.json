@@ -6,7 +6,7 @@
   "framework": "pytorch-torchscript",
   "license": "MIT",
   "repo_url": "https://github.com/tomkaba/poker44-miner-ml13tens2",
-  "repo_commit": "cfcde92",
+  "repo_commit": "5b1a9cd",
   "inference_mode": "local",
   "training_data_statement": "Trained on miner logs v1.5 (clean data) and benchmark ground truth.",
   "data_attestation": "This miner does not train on validator-private human data.",
@@ -23,6 +23,6 @@
     "poker44/utils/model_manifest.py",
     "poker44/validator/synapse.py"
   ],
-  "implementation_sha256": "785168f1272711748bb8b19119f4ccabd7e981e2c25d67b1c1064932f8280887",
+  "implementation_sha256": "d395ef4dde06074c6d3c6a4dcc1fb7a0a3088f9ad525f12f5467c1877ff08ddc",
   "notes": "Gen13Tens2: Improved neural network trained on v1.5 clean data with optimized anomaly thresholds. Consecutive duplicate action detection -99.7% more sensitive vs v1.4. Hardened TorchScript export for production inference."
 }
