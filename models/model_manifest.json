@@ -23,6 +23,6 @@
     "poker44/utils/model_manifest.py",
     "poker44/validator/synapse.py"
   ],
-  "implementation_sha256": "d395ef4dde06074c6d3c6a4dcc1fb7a0a3088f9ad525f12f5467c1877ff08ddc",
+  "implementation_sha256": "78ef5a9d0b07f838023a876d419acce606a070fa0e449ce977f5c3a6958a4dd9",
   "notes": "Gen13Tens2: Improved neural network trained on v1.5 clean data with optimized anomaly thresholds. Consecutive duplicate action detection -99.7% more sensitive vs v1.4. Hardened TorchScript export for production inference."
 }
