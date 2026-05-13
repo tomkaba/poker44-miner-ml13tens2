@@ -176,7 +176,7 @@ class Miner(BaseMinerNeuron):
         bt.logging.debug(f"[miner] Received {len(chunks)} chunk(s); first sizes={_preview(chunk_sizes)}")
 
         synapse.risk_scores = scores
-        synapse.predictions = [s >= 0.5 for s in scores]
+        synapse.predictions = [s >= 0.555 for s in scores]
         synapse.model_manifest = dict(self.model_manifest)
         bt.logging.info(f"[miner] Response manifest={synapse.model_manifest}")
 
