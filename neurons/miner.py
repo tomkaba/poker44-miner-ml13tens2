@@ -100,7 +100,7 @@ class Miner(BaseMinerNeuron):
         self.model_manifest = build_local_model_manifest(
             repo_root=repo_root,
             implementation_files=[
-                repo_root / "weights" / "runtime_model.ts",
+                repo_root / "weights" / "gen13_tens2.ts",
                 Path(__file__).resolve(),
                 repo_root / "poker44" / "__init__.py",
                 repo_root / "poker44" / "base" / "miner.py",

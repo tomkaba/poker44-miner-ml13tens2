@@ -9,7 +9,7 @@ logs/
 logs_backup/
 baklogs/
 weights/*
-!weights/runtime_model.ts
+!weights/gen13_tens2.ts
 data/
 analysis/
 *.sh~

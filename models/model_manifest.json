@@ -12,7 +12,7 @@
   "data_attestation": "This miner does not train on validator-private human data.",
   "private_data_attestation": "This miner does not train on validator-private human data.",
   "implementation_files": [
-    "weights/runtime_model.ts",
+    "weights/gen13_tens2.ts",
     "neurons/miner.py",
     "poker44/__init__.py",
     "poker44/base/miner.py",

@@ -21,8 +21,8 @@ VENV_BIN="${POKER44_VENV_BIN:-$REPO/.venv/bin}"
 
 MANIFEST_REPO_URL="${POKER44_MODEL_REPO_URL:-https://github.com/tomkaba/poker44-miner-ml13tens1}"
 MANIFEST_REPO_COMMIT="${POKER44_MODEL_REPO_COMMIT:-$(git -C "$REPO" rev-parse HEAD 2>/dev/null || true)}"
-MANIFEST_IMPL_FILES="weights/runtime_model.ts,neurons/miner.py,poker44/__init__.py,poker44/base/miner.py,poker44/base/neuron.py,poker44/miner_heuristics.py,poker44/utils/config.py,poker44/utils/misc.py,poker44/utils/model_manifest.py,poker44/validator/synapse.py"
-MODEL_ARTIFACT_REL="weights/runtime_model.ts"
+MANIFEST_IMPL_FILES="weights/gen13_tens2.ts,neurons/miner.py,poker44/__init__.py,poker44/base/miner.py,poker44/base/neuron.py,poker44/miner_heuristics.py,poker44/utils/config.py,poker44/utils/misc.py,poker44/utils/model_manifest.py,poker44/validator/synapse.py"
+MODEL_ARTIFACT_REL="weights/gen13_tens2.ts"
 
 if [[ -f "$ENV_FILE" ]]; then
   set -a
