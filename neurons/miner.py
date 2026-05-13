@@ -118,7 +118,7 @@ class Miner(BaseMinerNeuron):
                 "license": "MIT",
                 "repo_url": "https://github.com/tomkaba/poker44-miner-ml13tens2",
                 "repo_commit": git_commit,
-                "notes": "Gen13Tens2 is a completely new model version with hardened TorchScript export for production inference.",
+                "notes": "Gen13Tens2 is a completely new model version.",
                 "open_source": True,
                 "inference_mode": "local",
                 "training_data_statement": "Trained on miner logs and benchmark ground truth.",

@@ -23,6 +23,6 @@
     "poker44/utils/model_manifest.py",
     "poker44/validator/synapse.py"
   ],
-  "implementation_sha256": "78ef5a9d0b07f838023a876d419acce606a070fa0e449ce977f5c3a6958a4dd9",
+  "implementation_sha256": "55fc8c9853d06f6391eb5cfb718313aeeee496f74dc1132fb56f1c9fc4721607",
   "notes": "Gen13Tens2 is a completely new model version."
 }
