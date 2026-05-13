@@ -6,7 +6,7 @@
   "framework": "pytorch-torchscript",
   "license": "MIT",
   "repo_url": "https://github.com/tomkaba/poker44-miner-ml13tens2",
-  "repo_commit": "95cd4373d09d5486182a5116fbd2be93d154995f",
+  "repo_commit": "41d9c4bd2cb17212a9964dd86156aa227d1f19c1",
   "inference_mode": "local",
   "training_data_statement": "Trained on miner logs v1.5 (clean data) and benchmark ground truth.",
   "data_attestation": "This miner does not train on validator-private human data.",
@@ -23,6 +23,6 @@
     "poker44/utils/model_manifest.py",
     "poker44/validator/synapse.py"
   ],
-  "implementation_sha256": "55fc8c9853d06f6391eb5cfb718313aeeee496f74dc1132fb56f1c9fc4721607",
+  "implementation_sha256": "508b3bfe4e0502dd09c76cd3b46beb0a3e352a802c73c8b3b2a76aa918f61b5d",
   "notes": "Gen13Tens2 is a completely new model version."
 }
