@@ -1,14 +1,14 @@
 {
   "schema_version": "1",
   "open_source": true,
-  "model_name": "poker44_ml13tens1",
-  "model_version": "13.1",
+  "model_name": "poker44_ml13tens2",
+  "model_version": "13.2",
   "framework": "pytorch-torchscript",
   "license": "MIT",
-  "repo_url": "https://github.com/tomkaba/poker44-miner-ml13tens1",
-  "repo_commit": "9205eecf9ad6516264a6e47760cd3bea7508267d",
+  "repo_url": "https://github.com/tomkaba/poker44-miner-ml13tens2",
+  "repo_commit": "af55c7a",
   "inference_mode": "local",
-  "training_data_statement": "Trained on miner logs and benchmark ground truth.",
+  "training_data_statement": "Trained on miner logs v1.5 (clean data) and benchmark ground truth.",
   "data_attestation": "This miner does not train on validator-private human data.",
   "private_data_attestation": "This miner does not train on validator-private human data.",
   "implementation_files": [
@@ -23,6 +23,6 @@
     "poker44/utils/model_manifest.py",
     "poker44/validator/synapse.py"
   ],
-  "implementation_sha256": "6f210264c2fce291b97ef8bffb833502a78cdea943fb10af7602793c65c7bb22",
-  "notes": "Gen13Tens1 neural network scorer trained to replicate gen9_advmodel20b workaround heuristic. Hardened TorchScript export for production inference."
+  "implementation_sha256": "785168f1272711748bb8b19119f4ccabd7e981e2c25d67b1c1064932f8280887",
+  "notes": "Gen13Tens2: Improved neural network trained on v1.5 clean data with optimized anomaly thresholds. Consecutive duplicate action detection -99.7% more sensitive vs v1.4. Hardened TorchScript export for production inference."
 }
