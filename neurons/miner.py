@@ -137,6 +137,12 @@ class Miner(BaseMinerNeuron):
             f"Miner transparency status: {self.manifest_compliance['status']} "
             f"(missing_fields={self.manifest_compliance['missing_fields']})"
         )
+        bt.logging.info(
+            f"Manifest summary | model={self.model_manifest.get('model_name', '')} "
+            f"version={self.model_manifest.get('model_version', '')} "
+            f"repo={self.model_manifest.get('repo_url', '')} "
+            f"commit={self.model_manifest.get('repo_commit', '')}"
+        )
         bt.logging.info("Full manifest:\n" + _json.dumps(self.model_manifest, indent=2))
         bt.logging.info(
             f"Manifest digest={self.manifest_digest} "
